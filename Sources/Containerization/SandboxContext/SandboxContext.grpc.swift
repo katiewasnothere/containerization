@@ -148,6 +148,11 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextClientProtoc
     _ request: Com_Apple_Containerization_Sandbox_V3_KillRequest,
     callOptions: CallOptions?
   ) -> UnaryCall<Com_Apple_Containerization_Sandbox_V3_KillRequest, Com_Apple_Containerization_Sandbox_V3_KillResponse>
+
+  func copy(
+    callOptions: CallOptions?,
+    handler: @escaping (Com_Apple_Containerization_Sandbox_V3_CopyResponse) -> Void
+  ) -> BidirectionalStreamingCall<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse>
 }
 
 extension Com_Apple_Containerization_Sandbox_V3_SandboxContextClientProtocol {
@@ -569,6 +574,27 @@ extension Com_Apple_Containerization_Sandbox_V3_SandboxContextClientProtocol {
       interceptors: self.interceptors?.makeKillInterceptors() ?? []
     )
   }
+
+  /// Bidirectional streaming call to Copy
+  ///
+  /// Callers should use the `send` method on the returned object to send messages
+  /// to the server. The caller should send an `.end` after the final message has been sent.
+  ///
+  /// - Parameters:
+  ///   - callOptions: Call options.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ClientStreamingCall` with futures for the metadata and status.
+  public func copy(
+    callOptions: CallOptions? = nil,
+    handler: @escaping (Com_Apple_Containerization_Sandbox_V3_CopyResponse) -> Void
+  ) -> BidirectionalStreamingCall<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse> {
+    return self.makeBidirectionalStreamingCall(
+      path: Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.copy.path,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeCopyInterceptors() ?? [],
+      handler: handler
+    )
+  }
 }
 
 @available(*, deprecated)
@@ -748,6 +774,10 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncClientP
     _ request: Com_Apple_Containerization_Sandbox_V3_KillRequest,
     callOptions: CallOptions?
   ) -> GRPCAsyncUnaryCall<Com_Apple_Containerization_Sandbox_V3_KillRequest, Com_Apple_Containerization_Sandbox_V3_KillResponse>
+
+  func makeCopyCall(
+    callOptions: CallOptions?
+  ) -> GRPCAsyncBidirectionalStreamingCall<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse>
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -1035,6 +1065,16 @@ extension Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncClientProtoco
       interceptors: self.interceptors?.makeKillInterceptors() ?? []
     )
   }
+
+  public func makeCopyCall(
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncBidirectionalStreamingCall<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse> {
+    return self.makeAsyncBidirectionalStreamingCall(
+      path: Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.copy.path,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeCopyInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -1314,6 +1354,30 @@ extension Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncClientProtoco
       interceptors: self.interceptors?.makeKillInterceptors() ?? []
     )
   }
+
+  public func copy<RequestStream>(
+    _ requests: RequestStream,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<Com_Apple_Containerization_Sandbox_V3_CopyResponse> where RequestStream: Sequence, RequestStream.Element == Com_Apple_Containerization_Sandbox_V3_CopyRequest {
+    return self.performAsyncBidirectionalStreamingCall(
+      path: Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.copy.path,
+      requests: requests,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeCopyInterceptors() ?? []
+    )
+  }
+
+  public func copy<RequestStream>(
+    _ requests: RequestStream,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<Com_Apple_Containerization_Sandbox_V3_CopyResponse> where RequestStream: AsyncSequence & Sendable, RequestStream.Element == Com_Apple_Containerization_Sandbox_V3_CopyRequest {
+    return self.performAsyncBidirectionalStreamingCall(
+      path: Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.copy.path,
+      requests: requests,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeCopyInterceptors() ?? []
+    )
+  }
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -1403,6 +1467,9 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextClientInterc
 
   /// - Returns: Interceptors to use when invoking 'kill'.
   func makeKillInterceptors() -> [ClientInterceptor<Com_Apple_Containerization_Sandbox_V3_KillRequest, Com_Apple_Containerization_Sandbox_V3_KillResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'copy'.
+  func makeCopyInterceptors() -> [ClientInterceptor<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse>]
 }
 
 public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata {
@@ -1433,6 +1500,7 @@ public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata {
       Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.configureDns,
       Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.sync,
       Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.kill,
+      Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata.Methods.copy,
     ]
   )
 
@@ -1574,6 +1642,12 @@ public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextClientMetadata {
       path: "/com.apple.containerization.sandbox.v3.SandboxContext/Kill",
       type: GRPCCallType.unary
     )
+
+    public static let copy = GRPCMethodDescriptor(
+      name: "Copy",
+      path: "/com.apple.containerization.sandbox.v3.SandboxContext/Copy",
+      type: GRPCCallType.bidirectionalStreaming
+    )
   }
 }
 
@@ -1652,6 +1726,8 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextProvider: Ca
 
   /// Send a signal to a process via the PID.
   func kill(request: Com_Apple_Containerization_Sandbox_V3_KillRequest, context: StatusOnlyCallContext) -> EventLoopFuture<Com_Apple_Containerization_Sandbox_V3_KillResponse>
+
+  func copy(context: StreamingResponseCallContext<Com_Apple_Containerization_Sandbox_V3_CopyResponse>) -> EventLoopFuture<(StreamEvent<Com_Apple_Containerization_Sandbox_V3_CopyRequest>) -> Void>
 }
 
 extension Com_Apple_Containerization_Sandbox_V3_SandboxContextProvider {
@@ -1873,6 +1949,15 @@ extension Com_Apple_Containerization_Sandbox_V3_SandboxContextProvider {
         userFunction: self.kill(request:context:)
       )
 
+    case "Copy":
+      return BidirectionalStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Com_Apple_Containerization_Sandbox_V3_CopyRequest>(),
+        responseSerializer: ProtobufSerializer<Com_Apple_Containerization_Sandbox_V3_CopyResponse>(),
+        interceptors: self.interceptors?.makeCopyInterceptors() ?? [],
+        observerFactory: self.copy(context:)
+      )
+
     default:
       return nil
     }
@@ -2025,6 +2110,12 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncProvide
     request: Com_Apple_Containerization_Sandbox_V3_KillRequest,
     context: GRPCAsyncServerCallContext
   ) async throws -> Com_Apple_Containerization_Sandbox_V3_KillResponse
+
+  func copy(
+    requestStream: GRPCAsyncRequestStream<Com_Apple_Containerization_Sandbox_V3_CopyRequest>,
+    responseStream: GRPCAsyncResponseStreamWriter<Com_Apple_Containerization_Sandbox_V3_CopyResponse>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
 }
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -2253,6 +2344,15 @@ extension Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncProvider {
         wrapping: { try await self.kill(request: $0, context: $1) }
       )
 
+    case "Copy":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Com_Apple_Containerization_Sandbox_V3_CopyRequest>(),
+        responseSerializer: ProtobufSerializer<Com_Apple_Containerization_Sandbox_V3_CopyResponse>(),
+        interceptors: self.interceptors?.makeCopyInterceptors() ?? [],
+        wrapping: { try await self.copy(requestStream: $0, responseStream: $1, context: $2) }
+      )
+
     default:
       return nil
     }
@@ -2352,6 +2452,10 @@ public protocol Com_Apple_Containerization_Sandbox_V3_SandboxContextServerInterc
   /// - Returns: Interceptors to use when handling 'kill'.
   ///   Defaults to calling `self.makeInterceptors()`.
   func makeKillInterceptors() -> [ServerInterceptor<Com_Apple_Containerization_Sandbox_V3_KillRequest, Com_Apple_Containerization_Sandbox_V3_KillResponse>]
+
+  /// - Returns: Interceptors to use when handling 'copy'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeCopyInterceptors() -> [ServerInterceptor<Com_Apple_Containerization_Sandbox_V3_CopyRequest, Com_Apple_Containerization_Sandbox_V3_CopyResponse>]
 }
 
 public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata {
@@ -2382,6 +2486,7 @@ public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata {
       Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata.Methods.configureDns,
       Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata.Methods.sync,
       Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata.Methods.kill,
+      Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata.Methods.copy,
     ]
   )
 
@@ -2522,6 +2627,12 @@ public enum Com_Apple_Containerization_Sandbox_V3_SandboxContextServerMetadata {
       name: "Kill",
       path: "/com.apple.containerization.sandbox.v3.SandboxContext/Kill",
       type: GRPCCallType.unary
+    )
+
+    public static let copy = GRPCMethodDescriptor(
+      name: "Copy",
+      path: "/com.apple.containerization.sandbox.v3.SandboxContext/Copy",
+      type: GRPCCallType.bidirectionalStreaming
     )
   }
 }

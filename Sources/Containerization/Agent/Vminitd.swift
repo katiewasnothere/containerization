@@ -14,11 +14,13 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
+import ContainerizationArchive
 import ContainerizationError
 import ContainerizationOCI
 import ContainerizationOS
 import Foundation
 import GRPC
+import SwiftProtobuf
 import NIOPosix
 
 /// A remote connection into the vminitd Linux guest agent via a port (vsock).
@@ -283,6 +285,94 @@ extension Vminitd {
                 $0.gateway = gateway
             })
     }
+
+
+// TODO katiewasnothere: fix this into bool
+    public func copy(source: String, dest: String, into: Bool, followLinks: Bool) async throws {
+        let call = client.makeCopyCall()
+        let metadata = Com_Apple_Containerization_Sandbox_V3_CopyMetadata.with {
+            $0.action = into ? Com_Apple_Containerization_Sandbox_V3_CopyMetadata.Action.into : Com_Apple_Containerization_Sandbox_V3_CopyMetadata.Action.outOf
+            $0.sourcePath = source
+            $0.destPath = dest 
+            $0.followLinks = followLinks
+        }
+        
+        let anyMetadata = try Google_Protobuf_Any(message: metadata)
+        let initialRequest = Com_Apple_Containerization_Sandbox_V3_CopyRequest.with {
+            $0.content = anyMetadata
+        }
+
+        // send the initial request 
+        try await call.requestStream.send(initialRequest)
+
+        let tempDir = FileManager.default.uniqueTemporaryDirectory()
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        if into {
+             guard FileManager.default.fileExists(atPath: source) else {
+                    throw ContainerizationError(
+                        .invalidArgument,
+                        message: "\(source) does not exist"
+                    )
+                }
+                // TODO katiewasnothere: handle the case of a single file 
+                // let sourceURL = URL(copyConfig.source)
+                // let isDir = (try sourceURL.resourceValues(forKeys: [.isDirectoryKey])).isDirectory
+                let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
+                
+                // TODO katiewasnothere: is this the right format? 
+                let writer = try ArchiveWriter(format: .ustar, filter: .gzip, file: tempFile)
+                try writer.archiveDirectory(URL(filePath: source))
+                try writer.finishEncoding()
+
+                let handle = try FileHandle(forReadingFrom: tempFile)
+                try handle.seek(toOffset: 0)
+
+                let chunkSize = 64 * 1024 // 64 KB // todo katiewasnothere
+                var chunkData = handle.readData(ofLength: chunkSize)
+                while !chunkData.isEmpty {
+                    let dataMessage = Com_Apple_Containerization_Sandbox_V3_CopyData.with {
+                        $0.data = chunkData
+                    }
+                    let anyData = try Google_Protobuf_Any(message: dataMessage)
+                    let req = Com_Apple_Containerization_Sandbox_V3_CopyRequest.with{
+                        $0.content = anyData
+                    }
+                    try await call.requestStream.send(req)
+                    chunkData = handle.readData(ofLength: chunkSize)
+                }
+
+        } else {
+            // this is out of
+            // wait for response from server and combine chunks into a temporary location 
+            // untar the tar file into the destination location 
+
+            let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
+            let handle = try FileHandle(forWritingTo: tempFile)
+            defer {
+                try? handle.close()
+            }
+
+            for try await response in call.responseStream {
+                // TODO katiewasnothere: clean up this type
+                handle.write(response.data.data)
+                if response.complete {
+                    break
+                }
+            }
+
+            try handle.seek(toOffset: 0)
+
+            let reader = try ArchiveReader(file: tempFile)
+            try reader.extractContents(to: URL(filePath: dest))
+        }
+
+        call.requestStream.finish()
+    }
+
 
     /// Configure DNS within the sandbox's environment.
     public func configureDNS(config: DNS, location: String) async throws {

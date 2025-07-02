@@ -715,6 +715,14 @@ extension LinuxContainer {
         return try await state.vm.dial(port)
     }
 
+    public func copy(source: String, dest: String, into: Bool, followLinks: Bool) async throws {
+        let state = try self.state.startedState("copy")
+        // TODO katiewasnothere: based on into or out of, add the rootfs to the correct path 
+        try await state.vm.withAgent { agent in
+            try await agent.copy(source: source, dest: dest, into: into, followLinks: followLinks)
+        }
+    }
+
     /// Relay a unix socket from in the container to the host, or from the host
     /// to inside the container.
     public func relayUnixSocket(socket: UnixSocketConfiguration) async throws {

@@ -66,6 +66,7 @@ let package = Package(
                 "ContainerizationExtras",
                 "SendableProperty",
                 .target(name: "ContainerizationEXT4", condition: .when(platforms: [.macOS])),
+                "ContainerizationArchive",
             ],
             exclude: [
                 "../Containerization/SandboxContext/SandboxContext.proto"

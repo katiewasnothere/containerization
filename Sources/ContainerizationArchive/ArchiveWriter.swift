@@ -273,7 +273,7 @@ extension ArchiveWriter {
         let fm = FileManager.default
         let resourceKeys = Set<URLResourceKey>([
             .fileSizeKey, .fileResourceTypeKey,
-            .creationDateKey, .contentAccessDateKey, .contentModificationDateKey, .fileSecurityKey,
+            .creationDateKey, .contentAccessDateKey, .contentModificationDateKey, .fileSecurityKey
         ])
         guard let directoryEnumerator = fm.enumerator(at: dir, includingPropertiesForKeys: Array(resourceKeys), options: .producesRelativePathURLs) else {
             throw POSIXError(.ENOTDIR)
@@ -316,12 +316,23 @@ extension ArchiveWriter {
             guard let modified = resourceValues.contentModificationDate else {
                 throw ArchiveError.failedToGetProperty(fileURL.path(), .contentModificationDateKey)
             }
-            guard let perms = resourceValues.fileSecurity else {
-                throw ArchiveError.failedToGetProperty(fileURL.path(), .fileSecurityKey)
-            }
-            CFFileSecurityGetMode(perms, &mode)
-            CFFileSecurityGetOwner(perms, &uid)
-            CFFileSecurityGetGroup(perms, &gid)
+            
+            #if os(macOS)
+                guard let perms = resourceValues.fileSecurity else {
+                    throw ArchiveError.failedToGetProperty(fileURL.path(), .fileSecurityKey)
+                }
+                CFFileSecurityGetMode(perms, &mode)
+                CFFileSecurityGetOwner(perms, &uid)
+                CFFileSecurityGetGroup(perms, &gid)
+            #else
+                var statbuf = stat()
+                if stat(fileURL.path, &statbuf) != 0 {
+                    throw ArchiveError.failedToGetFileStat(fileURL.path())
+                }
+                mode = statbuf.st_mode & ~S_IFMT
+                gid = statbuf.st_gid
+                uid = statbuf.st_uid
+            #endif
             entry.path = fileURL.relativePath
             entry.size = size
             entry.creationDate = created

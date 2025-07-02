@@ -127,7 +127,7 @@ extension ArchiveReader {
     }
 
     /// Extracts the contents of an archive to the provided directory.
-    /// Currently only handles regular files and directories present in the archive.
+    /// Currently only handles regular files, directories, and symlinks present in the archive.
     public func extractContents(to directory: URL) throws {
         let fm = FileManager.default
         var foundEntry = false

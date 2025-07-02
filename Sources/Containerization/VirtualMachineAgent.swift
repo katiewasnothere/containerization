@@ -58,4 +58,7 @@ public protocol VirtualMachineAgent: Sendable {
     func addressAdd(name: String, address: String) async throws
     func routeAddDefault(name: String, gateway: String) async throws
     func configureDNS(config: DNS, location: String) async throws
+
+    // todo katiewasnothere: figure out the request details 
+    func copy(source: String, dest: String, into: Bool, followLinks: Bool) async throws
 }

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 package com.apple.containerization.sandbox.v3;
 
 // Context for interacting with a container's runtime environment.
@@ -54,6 +56,34 @@ service SandboxContext {
   rpc Sync(SyncRequest) returns (SyncResponse);
   // Send a signal to a process via the PID.
   rpc Kill(KillRequest) returns (KillResponse);
+
+  rpc Copy(stream CopyRequest) returns (stream CopyResponse);
+}
+
+message CopyMetadata {
+  enum Action {
+    INTO = 0;
+    OUT_OF = 1;
+  }
+  Action action = 1;
+  string sourcePath = 2;
+  string destPath = 3;
+  bool followLinks = 4;
+}
+
+message CopyData {
+  bytes data = 1;
+}
+
+message CopyRequest {
+  // using an any type here allows us to send an initial request of type CopyMetatdata
+  // and type CopyData
+  google.protobuf.Any content = 1;
+}
+
+message CopyResponse {
+  CopyData data = 1;
+  bool complete = 2;
 }
 
 message Stdio {

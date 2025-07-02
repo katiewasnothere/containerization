@@ -33,6 +33,7 @@ public enum ArchiveError: Error, CustomStringConvertible {
     case unableToSetOption(CInt)
     case failedToSetLocale(locales: [String])
     case failedToGetProperty(String, URLResourceKey)
+    case failedToGetFileStat(String)
     case failedToDetectFilter
     case failedToDetectFormat
     case failedToExtractArchive(String)
@@ -68,6 +69,8 @@ public enum ArchiveError: Error, CustomStringConvertible {
             return "Failed to set locale to \(locales)"
         case .failedToGetProperty(let path, let propertyName):
             return "Failed to read property \(propertyName) from file at path \(path)"
+        case .failedToGetFileStat(let path):
+            return "Failed to get file stat for \(path)"
         case .failedToDetectFilter:
             return "Failed to detect filter from archive."
         case .failedToDetectFormat:

@@ -30,6 +30,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-nio", from: "2.80.0"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.29.0"),
         .package(name: "containerization", path: "../"),
     ],
     targets: [
@@ -45,6 +46,7 @@ let package = Package(
                 .product(name: "ContainerizationNetlink", package: "containerization"),
                 .product(name: "ContainerizationIO", package: "containerization"),
                 .product(name: "ContainerizationOS", package: "containerization"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 "LCShim",
             ]
         ),

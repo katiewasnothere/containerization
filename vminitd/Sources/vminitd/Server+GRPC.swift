@@ -15,6 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 import Containerization
+import ContainerizationArchive
 import ContainerizationError
 import ContainerizationNetlink
 import ContainerizationOCI
@@ -25,6 +26,7 @@ import Logging
 import NIOCore
 import NIOPosix
 import _NIOFileSystem
+import SwiftProtobuf
 
 private let _setenv = Foundation.setenv
 
@@ -397,7 +399,7 @@ extension Initd: Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncProvid
             )
 
             // This is an exec.
-            if let container = await self.state.containers[request.containerID] {
+            if let container: ManagedContainer = await self.state.containers[request.containerID] {
                 try await container.createExec(
                     id: request.id,
                     stdio: stdioPorts,
@@ -792,6 +794,79 @@ extension Initd: Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncProvid
         let r = _kill(request.pid, request.signal)
         return .with {
             $0.result = r
+        }
+    }
+
+    func copy(
+        requestStream: GRPCAsyncRequestStream<Com_Apple_Containerization_Sandbox_V3_CopyRequest>,
+        responseStream: GRPCAsyncResponseStreamWriter<Com_Apple_Containerization_Sandbox_V3_CopyResponse>,
+        context: GRPCAsyncServerCallContext
+    ) async throws {
+        log.debug("copy")
+
+        // get the initial  message which will have the request info 
+        guard let initialRequest = try await requestStream.first(where: { _ in true }) else {
+            throw GRPCStatus(code: .invalidArgument, message: "missing initial request details")
+        }
+
+        let copyConfig = try Com_Apple_Containerization_Sandbox_V3_CopyMetadata(unpackingAny: initialRequest.content)
+        
+        let tempDir = FileManager.default.uniqueTemporaryDirectory()
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.removeItem(at: tempDir)
+        }
+
+        if copyConfig.action == Com_Apple_Containerization_Sandbox_V3_CopyMetadata.Action.into {
+            let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
+            let handle = try FileHandle(forWritingTo: tempFile)
+            defer {
+                try? handle.close()
+            }
+            for try await request in requestStream {
+                let copyData = try Com_Apple_Containerization_Sandbox_V3_CopyData(unpackingAny: request.content)
+                handle.write(copyData.data)
+            }
+
+            try handle.seek(toOffset: 0)
+
+            let reader = try ArchiveReader(file: tempFile)
+            try reader.extractContents(to: URL(filePath: copyConfig.destPath))
+
+            // katiewasnothere todo check if the destination is a file or a directory 
+
+            // TODO katiewasnothere: return a response
+        } else {
+            guard FileManager.default.fileExists(atPath: copyConfig.sourcePath) else {
+                throw ContainerizationError(
+                    .invalidArgument,
+                    message: "\(copyConfig.sourcePath) does not exist"
+                )
+            }
+            // TODO katiewasnothere: handle the case of a single file 
+            let tempFile = tempDir.appendingPathComponent(UUID().uuidString)
+            let writer = try ArchiveWriter(format: .ustar, filter: .gzip, file: tempFile)
+            try writer.archiveDirectory(URL(filePath: copyConfig.sourcePath))
+            try writer.finishEncoding()
+
+            let handle = try FileHandle(forReadingFrom: tempFile)
+            try handle.seek(toOffset: 0)
+
+            let chunkSize = 64 * 1024 // 64 KB // todo katiewasnothere
+            var chunkData = handle.readData(ofLength: chunkSize)
+            while !chunkData.isEmpty {
+                let dataMessage = Com_Apple_Containerization_Sandbox_V3_CopyData.with{
+                    $0.data = chunkData
+                }
+                let completed = chunkData.count != chunkSize
+                let resp = Com_Apple_Containerization_Sandbox_V3_CopyResponse.with{
+                    $0.data = dataMessage
+                    $0.complete = completed
+                }
+                try await responseStream.send(resp)
+                chunkData = handle.readData(ofLength: chunkSize)
+            }
+
         }
     }
 }
