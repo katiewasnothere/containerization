@@ -177,7 +177,7 @@ public struct User: Codable, Sendable {
 
 public struct Root: Codable, Sendable {
     public var path: String
-    public var readonly: Bool
+    public var readonly: Bool?
 
     public init(path: String, readonly: Bool) {
         self.path = path
