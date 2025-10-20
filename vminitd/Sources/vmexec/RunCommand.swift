@@ -40,12 +40,15 @@ struct RunCommand: ParsableCommand {
         try execInNamespace(spec: ociSpec, log: log)
     }
 
-    private func childRootSetup(rootfs: ContainerizationOCI.Root, mounts: [ContainerizationOCI.Mount], log: Logger) throws {
+    private func childRootSetup(rootfs: ContainerizationOCI.Root, mounts: [ContainerizationOCI.Mount]?, log: Logger) throws {
         // setup rootfs
         try prepareRoot(rootfs: rootfs.path)
-        try mountRootfs(rootfs: rootfs.path, mounts: mounts)
-        try setDevSymlinks(rootfs: rootfs.path)
 
+        if let mounts = mounts {
+            try mountRootfs(rootfs: rootfs.path, mounts: mounts)
+        }
+
+        try setDevSymlinks(rootfs: rootfs.path)
         try pivotRoot(rootfs: rootfs.path)
         try reOpenDevNull()
     }

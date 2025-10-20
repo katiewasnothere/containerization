@@ -23,7 +23,7 @@ public struct Spec: Codable, Sendable {
     public var hooks: Hook?
     public var process: Process?
     public var hostname, domainname: String?
-    public var mounts: [Mount]
+    public var mounts: [Mount]?
     public var annotations: [String: String]?
     public var root: Root?
     public var linux: Linux?
