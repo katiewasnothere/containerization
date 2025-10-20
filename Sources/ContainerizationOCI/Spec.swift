@@ -67,12 +67,12 @@ public struct Process: Codable, Sendable {
     public var cwd: String
     public var env: [String]
     public var consoleSize: Box?
-    public var selinuxLabel: String
-    public var noNewPrivileges: Bool
-    public var commandLine: String
+    public var selinuxLabel: String?
+    public var noNewPrivileges: Bool?
+    public var commandLine: String?
     public var oomScoreAdj: Int?
     public var capabilities: LinuxCapabilities?
-    public var apparmorProfile: String
+    public var apparmorProfile: String?
     public var user: User
     public var rlimits: [POSIXRlimit]
     public var args: [String]
