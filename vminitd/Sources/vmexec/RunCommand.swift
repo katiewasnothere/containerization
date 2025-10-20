@@ -114,9 +114,9 @@ struct RunCommand: ParsableCommand {
             try pty.close()
         }
 
-        if !spec.hostname.isEmpty {
-            let errCode = spec.hostname.withCString { ptr in
-                Musl.sethostname(ptr, spec.hostname.count)
+        if let hostname = spec.hostname, !hostname.isEmpty {
+            let errCode = hostname.withCString { ptr in
+                Musl.sethostname(ptr, hostname.count)
             }
             guard errCode == 0 else {
                 throw App.Errno(stage: "sethostname()")
@@ -128,7 +128,6 @@ struct RunCommand: ParsableCommand {
         // inherited are marked close-on-exec so they stay out of the
         // container.
         try App.applyCloseExecOnFDs()
-
         try App.setRLimits(rlimits: process.rlimits)
 
         // Change stdio to be owned by the requested user.

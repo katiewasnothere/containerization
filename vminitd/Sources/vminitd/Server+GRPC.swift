@@ -479,8 +479,7 @@ extension Initd: Com_Apple_Containerization_Sandbox_V3_SandboxContextAsyncProvid
 
                 // Write the etc/hostname file in the container rootfs since some init-systems
                 // depend on it.
-                let hostname = ociSpec.hostname
-                if let root = ociSpec.root, !hostname.isEmpty {
+                if let root = ociSpec.root, let hostname = ociSpec.hostname, !hostname.isEmpty {
                     let etc = URL(fileURLWithPath: root.path).appendingPathComponent("etc")
                     try FileManager.default.createDirectory(atPath: etc.path, withIntermediateDirectories: true)
                     let hostnamePath = etc.appendingPathComponent("hostname")
